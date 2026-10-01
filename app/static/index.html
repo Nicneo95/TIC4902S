@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f6f1" />
+    <title>Wanderwise — voice trip planner</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #1c3029;
+        background: #f4f6f1;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 36px 18px;
+        background:
+          radial-gradient(ellipse at 5% 5%, rgba(192, 217, 193, 0.4), transparent 34%),
+          radial-gradient(ellipse at 100% 100%, rgba(246, 213, 164, 0.35), transparent 32%),
+          #f4f6f1;
+      }
+
+      button, input, select { font: inherit; }
+
+      .shell { width: min(100%, 820px); margin: 0 auto; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+      .brand { display: flex; align-items: center; gap: 11px; font-weight: 750; letter-spacing: -0.03em; }
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 13px;
+        background: #244d3d;
+        color: white;
+        font-size: 20px;
+      }
+      .model-tag {
+        padding: 8px 12px;
+        border: 1px solid #dce5dc;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #52705f;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .card {
+        overflow: hidden;
+        border: 1px solid rgba(35, 65, 50, 0.1);
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.93);
+        box-shadow: 0 24px 70px rgba(33, 57, 43, 0.1);
+      }
+      .hero { padding: 30px 32px 22px; }
+      .eyebrow { margin: 0 0 8px; color: #6d8a75; font-size: 12px; font-weight: 750; letter-spacing: 0.12em; text-transform: uppercase; }
+      h1 { margin: 0; color: #1d382b; font-size: clamp(27px, 5vw, 40px); letter-spacing: -0.055em; line-height: 1.1; }
+      .subtitle { max-width: 590px; margin: 12px 0 0; color: #738078; font-size: 15px; line-height: 1.6; }
+
+      .chat {
+        display: flex;
+        min-height: 360px;
+        max-height: 52vh;
+        flex-direction: column;
+        gap: 17px;
+        overflow-y: auto;
+        padding: 25px 32px;
+        border-top: 1px solid #edf0eb;
+        border-bottom: 1px solid #edf0eb;
+        background: linear-gradient(180deg, #fbfcfa, #f8faf7);
+      }
+      .message-row { display: flex; align-items: flex-end; gap: 9px; }
+      .message-row.user { justify-content: flex-end; }
+      .avatar {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        place-items: center;
+        border-radius: 11px;
+        background: #e5eee5;
+        color: #315844;
+        font-size: 14px;
+      }
+      .bubble {
+        max-width: min(82%, 610px);
+        padding: 13px 16px;
+        border: 1px solid #e8ede7;
+        border-radius: 17px 17px 17px 5px;
+        background: white;
+        color: #304239;
+        font-size: 14px;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+      }
+      .user .bubble { border-color: #244d3d; border-radius: 17px 17px 5px 17px; background: #244d3d; color: white; }
+      .bubble.pending { color: #75847b; font-style: italic; }
+      .bubble.error { border-color: #f0c8bf; background: #fff7f4; color: #9c3826; }
+
+      .composer { padding: 20px 24px 23px; }
+      .hint { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 3px 13px; color: #77857b; font-size: 12px; }
+      .hint strong { color: #536c5c; font-weight: 650; }
+      .controls { display: flex; align-items: center; gap: 10px; }
+      /* Speech-to-text styles are disabled but retained for future re-enabling:
+      .language {
+        min-width: 112px;
+        padding: 0 10px;
+        border: 1px solid #dde5dd;
+        border-radius: 14px;
+        outline: none;
+        background: white;
+        color: #4d6255;
+        font-size: 13px;
+      }
+      */
+      .text-input {
+        width: 100%;
+        height: 50px;
+        min-width: 0;
+        padding: 0 16px;
+        border: 1px solid #dfe6df;
+        border-radius: 15px;
+        outline: none;
+        background: #fff;
+        color: #263a2f;
+        transition: border-color 150ms, box-shadow 150ms;
+      }
+      .text-input:focus { border-color: #6b9679; box-shadow: 0 0 0 3px rgba(86, 137, 102, 0.12); }
+      /* .text-input:focus, .language:focus { border-color: #6b9679; box-shadow: 0 0 0 3px rgba(86, 137, 102, 0.12); } */
+      .text-input::placeholder { color: #a2ada5; }
+      .icon-button {
+        display: grid;
+        width: 50px;
+        height: 50px;
+        flex: 0 0 50px;
+        place-items: center;
+        border: 0;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: transform 150ms, background 150ms, opacity 150ms;
+      }
+      .icon-button:hover:not(:disabled) { transform: translateY(-1px); }
+      .icon-button:disabled { cursor: not-allowed; opacity: 0.55; }
+      /* .mic { background: #e9f0e9; color: #315844; font-size: 21px; }
+      .mic.recording { background: #ffebe5; color: #b44933; animation: pulse 1.2s infinite; }
+      */
+      .send { background: #244d3d; color: white; font-size: 20px; }
+      .status { min-height: 18px; margin: 12px 3px 0; color: #6e7e73; font-size: 12px; }
+      .status.error { color: #a13d2b; }
+      .footer { padding: 16px 10px 0; color: #879188; font-size: 11px; text-align: center; }
+      /* @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(222, 119, 90, 0.13); } } */
+      @media (max-width: 600px) {
+        body { padding: 16px 10px; }
+        .topbar { margin-bottom: 16px; }
+        .model-tag { padding: 7px 9px; font-size: 10px; }
+        .hero { padding: 24px 21px 19px; }
+        .chat { min-height: 43vh; max-height: 55vh; padding: 19px 16px; }
+        .composer { padding: 17px 14px 18px; }
+        /* .controls { flex-wrap: wrap; }
+        .language { height: 44px; }
+        .text-input { height: 48px; flex: 1 1 calc(100% - 112px); }
+        */
+        .text-input { height: 48px; }
+        .icon-button { width: 46px; height: 46px; flex-basis: 46px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span> Wanderwise</div>
+        <span class="model-tag">QWEN&nbsp; ITINERARY PLANNER</span>
+      </header>
+
+      <section class="card" aria-label="Travel itinerary planner">
+        <div class="hero">
+          <p class="eyebrow">Your personal trip planner</p>
+          <h1>Where would you like to go?</h1>
+          <p class="subtitle">Tell me where you’re going, how long you’ll stay, and what you enjoy. I’ll turn your ideas into a practical itinerary.</p>
+        </div>
+
+        <div id="chat" class="chat" role="log" aria-live="polite" aria-label="Conversation">
+          <div class="message-row assistant">
+            <span class="avatar" aria-hidden="true">✦</span>
+            <div class="bubble">Hi! Try asking: “Create a five-day Singapore itinerary with great food and family-friendly activities.”</div>
+          </div>
+        </div>
+
+        <form id="composer" class="composer">
+          <div class="hint"><strong>Plan your next trip</strong><span>Type a request below</span></div>
+          <div class="controls">
+            <!-- QUIZ FORM GOES HERE (inside #composer, before the chat text input).
+            Add fields such as destination, start date, number of days, budget,
+            interests, and travel pace. Give each field an id so JavaScript can read it.
+            -->
+            <!-- Speech-to-text language selector disabled:
+            <select id="language" class="language" aria-label="Spoken language">
+              <option value="en" selected>English</option>
+              <option value="zh">中文</option>
+              <option value="ms">Malay</option>
+              <option value="">Auto detect</option>
+            </select>
+            -->
+            <input id="messageInput" class="text-input" type="text" maxlength="20000" placeholder="Ask for a trip itinerary…" autocomplete="off" />
+            <!-- Speech-to-text microphone control disabled:
+            <button id="micButton" class="icon-button mic" type="button" aria-label="Start recording" title="Start recording">🎙</button>
+            -->
+            <button id="sendButton" class="icon-button send" type="submit" aria-label="Send message" title="Send message">↑</button>
+          </div>
+          <p id="status" class="status" role="status">Enter a destination and trip preferences to get started.</p>
+        </form>
+      </section>
+      <p class="footer">Itineraries are generated by your configured Groq chat model.</p>
+    </main>
+
+    <script>
+      const chat = document.getElementById("chat");
+      const composer = document.getElementById("composer");
+      const messageInput = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      const statusText = document.getElementById("status");
+      const conversation = [];
+      let busy = false;
+      /* Speech-to-text browser state is disabled:
+      const micButton = document.getElementById("micButton");
+      const languageSelect = document.getElementById("language");
+      const recordHint = document.getElementById("recordHint");
+      let recorder = null;
+      let mediaStream = null;
+      let audioChunks = [];
+      */
+
+      function addMessage(role, text, extraClass = "") {
+        const row = document.createElement("div");
+        row.className = `message-row ${role}`;
+        if (role === "assistant") {
+          const avatar = document.createElement("span");
+          avatar.className = "avatar";
+          avatar.setAttribute("aria-hidden", "true");
+          avatar.textContent = "✦";
+          row.appendChild(avatar);
+        }
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${extraClass}`.trim();
+        bubble.textContent = text;
+        row.appendChild(bubble);
+        chat.appendChild(row);
+        chat.scrollTop = chat.scrollHeight;
+        return bubble;
+      }
+
+      function setStatus(message, isError = false) {
+        statusText.textContent = message;
+        statusText.classList.toggle("error", isError);
+      }
+
+      function setBusy(value) {
+        busy = value;
+        sendButton.disabled = value;
+        messageInput.disabled = value;
+      }
+
+      async function readResponse(response) {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.detail || `Request failed (${response.status}).`);
+        }
+        return data;
+      }
+
+      async function askModel(text) {
+        // QUIZ SUBMISSION GOES IN THE FORM SUBMIT HANDLER BELOW.
+        // Read the quiz fields, then include their answers in the /chat request body.
+        conversation.push({ role: "user", content: text });
+        while (conversation.length > 40) conversation.shift();
+        const pending = addMessage("assistant", "Planning your trip…", "pending");
+        setBusy(true);
+        setStatus("Sending your request to the itinerary assistant…");
+        try {
+          const data = await fetch("/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: "system",
+                  content: "You are a helpful travel itinerary assistant. Create practical day-by-day plans from the user's requests. Include useful activity and transport suggestions, state assumptions when details are missing, and never claim to make bookings. Be clear and friendly."
+                },
+                ...conversation
+              ],
+              temperature: 0.6,
+              max_tokens: 1500
+            })
+          }).then(readResponse);
+          pending.textContent = data.content;
+          pending.classList.remove("pending");
+          conversation.push({ role: "assistant", content: data.content });
+          setStatus(`Ready · ${data.model}`);
+        } catch (error) {
+          pending.textContent = error.message;
+          pending.classList.remove("pending");
+          pending.classList.add("error");
+          setStatus(error.message, true);
+        } finally {
+          setBusy(false);
+          messageInput.focus();
+        }
+      }
+
+      /* Speech-to-text handlers disabled; retained for later re-enabling:
+      async function transcribeRecording(blob, mimeType) {
+        const extension = mimeType.includes("mp4") ? "mp4" : mimeType.includes("ogg") ? "ogg" : mimeType.includes("wav") ? "wav" : "webm";
+        const formData = new FormData();
+        formData.append("file", new File([blob], `voice-request.${extension}`, { type: mimeType }));
+        if (languageSelect.value) formData.append("language", languageSelect.value);
+        const response = await fetch("/transcribe", { method: "POST", body: formData });
+        return readResponse(response);
+      }
+
+      async function stopRecordingAndSend() {
+        const mimeType = recorder.mimeType || "audio/webm";
+        const blob = new Blob(audioChunks, { type: mimeType });
+        if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
+        mediaStream = null;
+        recorder = null;
+        audioChunks = [];
+        micButton.classList.remove("recording");
+        micButton.textContent = "🎙";
+        micButton.setAttribute("aria-label", "Start recording");
+        recordHint.textContent = "Tap the mic to speak";
+
+        if (!blob.size) {
+          setStatus("No audio was captured. Please try again.", true);
+          return;
+        }
+
+        const pending = addMessage("assistant", "Transcribing your voice…", "pending");
+        setBusy(true);
+        setStatus("Transcribing your recording…");
+        try {
+          const data = await transcribeRecording(blob, mimeType);
+          const transcript = data.text.trim();
+          pending.remove();
+          if (!transcript) throw new Error("No speech was recognized. Please try speaking again.");
+          addMessage("user", transcript);
+          await askModel(transcript);
+        } catch (error) {
+          pending.textContent = error.message;
+          pending.classList.remove("pending");
+          pending.classList.add("error");
+          setStatus(error.message, true);
+          setBusy(false);
+        }
+      }
+
+      async function startRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+          setStatus("Audio recording is not supported in this browser. Try a current version of Chrome, Edge, or Safari.", true);
+          return;
+        }
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const supportedTypes = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus", "audio/webm"];
+          const mimeType = supportedTypes.find((type) => MediaRecorder.isTypeSupported(type));
+          recorder = mimeType ? new MediaRecorder(mediaStream, { mimeType }) : new MediaRecorder(mediaStream);
+          audioChunks = [];
+          recorder.addEventListener("dataavailable", (event) => {
+            if (event.data.size) audioChunks.push(event.data);
+          });
+          recorder.addEventListener("stop", stopRecordingAndSend, { once: true });
+          recorder.start();
+          micButton.classList.add("recording");
+          micButton.textContent = "■";
+          micButton.setAttribute("aria-label", "Stop recording");
+          recordHint.textContent = "Recording… tap the mic to finish";
+          setStatus("Listening. Tap the stop button when you’ve finished speaking.");
+        } catch (error) {
+          if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
+          mediaStream = null;
+          setStatus(error.name === "NotAllowedError" ? "Microphone permission was denied. Allow microphone access and try again." : error.message, true);
+        }
+      }
+
+      micButton.addEventListener("click", () => {
+        if (recorder && recorder.state === "recording") recorder.stop();
+        else if (!busy) startRecording();
+      });
+      */
+
+      // QUIZ SUBMIT HANDLER GOES HERE: collect form values and pass them to askModel()
+      // or add them as an optional quiz object in the JSON sent by askModel().
+      composer.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const text = messageInput.value.trim();
+        if (!text || busy) return;
+        messageInput.value = "";
+        addMessage("user", text);
+        await askModel(text);
+      });
+    </script>
+  </body>
+</html>
